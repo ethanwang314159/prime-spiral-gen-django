@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Prime Spiral Generator</title>
+  <style>
+    a {
+  color: #00fbff;
+}
+
+a:hover {
+  color: rgb(0, 151, 193);
+}
+
+    body {
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    button {
+      background: #00d483;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1.1em;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px;
+    }
+
+    button:hover {
+      background: #00721f;
+    }
+
+img {
+  margin-top: 25px;
+  border-radius: 10px;
+  max-width: 90%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 0, 0, 0.5), 0 0 60px rgba(0, 0, 0, 0.3);
+}
+
+
+    #jsonInput {
+      width: 80%;
+      height: 40px;
+      margin-top: 20px;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 1em;
+      color: #333;
+      max-width: 600px; 
+      box-sizing: border-box;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    h1, p {
+      margin-bottom: 20px;
+    }
+
+    /* Add responsiveness */
+    @media (max-width: 768px) {
+      #jsonInput {
+        width: 90%;
+      }
+
+      img {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Prime Spiral Generator</h1>
+    <p> <a href="https://github.com/ethanwang314159">Made by Ethan Wang</a> </p>
+
+    <button id="generateBtn">Generate Spiral</button>
+    <button id="copyBtn">Copy Config</button>
+    <button id="loadJsonBtn">Load Json</button>
+    
+    <input type="text" id="jsonInput" placeholder='Paste your JSON here...'>
+    
+    <img id="spiralImg" src="/spiral/" alt="Prime Spiral Image">
+  </div>
+
+  <script>
+    const btnGenerate = document.getElementById("generateBtn");
+    const btnCopy = document.getElementById("copyBtn");
+    const btnLoadJson = document.getElementById("loadJsonBtn");
+    const img = document.getElementById("spiralImg");
+    const jsonInput = document.getElementById("jsonInput");
+
+    btnGenerate.addEventListener("click", () => {
+      const timestamp = new Date().getTime();
+      img.src = `/spiral/?${timestamp}`;  
+    });
+
+    btnCopy.addEventListener("click", async () => {
+      try {
+        const response = await fetch("/spiral/json/");
+        const minifiedData = await response.text();
+        await navigator.clipboard.writeText(minifiedData);
+        alert("copied");
+      } catch (err) {
+        alert("error");
+        console.error(err);
+      }
+    });
+
+    btnLoadJson.addEventListener("click", async () => {
+      try {
+        const inputText = jsonInput.value.trim();
+        if (!inputText) {
+          alert("invalid json");
+          return;
+        }
+
+        const settings = JSON.parse(inputText);
+
+        const transformedSettings = [
+          settings[0].map(([num, coords]) => [num, coords]),
+          settings[1],
+          settings[2],
+          settings[3],
+          settings[4]
+        ];
+
+        const response = await fetch("/spiral/json/", {
+          method: "POST",
+          body: JSON.stringify(transformedSettings),
+          headers: { "Content-Type": "application/json" }
+        });
+
+        const result = await response.blob();
+        
+        if (result.error) {
+          alert("Error generating spiral!");
+        } else {
+          const url = URL.createObjectURL(result);
+          img.src = url; 
+        }
+      } catch (err) {
+        alert("Failed to load and generate spiral.");
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
